@@ -21,6 +21,12 @@ const KEYS = {
   KeyE: "leanRight",
 };
 
+function publicAsset(path) {
+  const base = import.meta.env.BASE_URL || "/";
+  const prefix = base.endsWith("/") ? base : `${base}/`;
+  return `${prefix}${String(path).replace(/^\/+/, "")}`;
+}
+
 const LOOK_SENS = 0.0022;
 const PITCH_MIN = -1.45;
 const PITCH_MAX = 1.45;
@@ -1017,11 +1023,11 @@ function loadCobbleFloor(mesh) {
     return tex;
   };
   const mat = mesh.material;
-  mat.map = prep(loader.load("/textures/cobble/diff.jpg"), THREE.SRGBColorSpace);
-  mat.normalMap = prep(loader.load("/textures/cobble/nor.png"), THREE.NoColorSpace);
+  mat.map = prep(loader.load(publicAsset("textures/cobble/diff.jpg")), THREE.SRGBColorSpace);
+  mat.normalMap = prep(loader.load(publicAsset("textures/cobble/nor.png")), THREE.NoColorSpace);
   mat.normalScale.set(1.4, 1.4);
-  mat.roughnessMap = prep(loader.load("/textures/cobble/rough.png"), THREE.NoColorSpace);
-  mat.displacementMap = prep(loader.load("/textures/cobble/disp.png"), THREE.NoColorSpace);
+  mat.roughnessMap = prep(loader.load(publicAsset("textures/cobble/rough.png")), THREE.NoColorSpace);
+  mat.displacementMap = prep(loader.load(publicAsset("textures/cobble/disp.png")), THREE.NoColorSpace);
   mat.displacementScale = 0.1;
   mat.displacementBias = -0.03;
   mat.color.set(0xffffff);
