@@ -1,0 +1,18 @@
+---
+description: Do not change player walk/sprint/crouch/prone speed or walk animation pace
+alwaysApply: true
+---
+
+# Walk speed is locked
+
+The player movement speed is final. Do not change it unless the user explicitly asks to change walking speed.
+
+Do not edit `moveSpeed()` or walk animation pace in `src/engine.js`. Keep these values:
+
+- prone: `1.0`
+- crouch: `1.9`
+- sprint: `5.0`
+- walk: `3.1`
+- walk animation pace: sprint `7.4`, walk `4.6`
+
+Do not "improve", retune, or scale walking, sprint, crouch, or prone as a side effect of other work.
