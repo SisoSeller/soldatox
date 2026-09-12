@@ -408,7 +408,8 @@ export function createEngine(canvas, getSettings) {
   }
 
   function inputBlocked() {
-    return controlLock || document.activeElement?.id === "chat-input";
+    const tag = document.activeElement?.tagName;
+    return controlLock || tag === "INPUT" || tag === "TEXTAREA";
   }
 
   function onKey(e, down) {

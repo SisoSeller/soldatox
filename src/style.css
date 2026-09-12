@@ -25,6 +25,31 @@ body,
   color: var(--fg);
   font-family: var(--font-ui);
   user-select: none;
+  scrollbar-width: thin;
+  scrollbar-color: #5a5a5a #000;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f3f;
+  border-radius: 999px;
+  border: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
+}
+
+::-webkit-scrollbar-corner {
+  background: #000;
 }
 
 body {
@@ -116,7 +141,8 @@ select {
 .screen.is-on .menu-stack,
 .screen.is-on .maps-grid,
 .screen.is-on .options-body,
-.screen.is-on .loading-center {
+.screen.is-on .loading-center,
+.screen.is-on .mp-form {
   animation: rise 0.38s ease both;
 }
 
@@ -236,6 +262,11 @@ select {
 .corner-btn.is-hidden {
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
+}
+
+.corner-btn.is-disabled {
+  opacity: 0.28;
   pointer-events: none;
 }
 
@@ -456,11 +487,21 @@ select {
 }
 
 .options-body::-webkit-scrollbar {
-  width: 4px;
+  width: 10px;
+}
+
+.options-body::-webkit-scrollbar-track {
+  background: #000;
 }
 
 .options-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.35);
+  background: #3f3f3f;
+  border-radius: 999px;
+  border: 2px solid #000;
+}
+
+.options-body::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
 }
 
 .opt-row {
@@ -1051,6 +1092,168 @@ select {
 .hud-layer.is-stealth .hud-hp {
   visibility: hidden;
   opacity: 0;
+}
+
+.mp-form {
+  position: absolute;
+  top: calc(var(--pad) + clamp(88px, 11vw, 140px));
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 140px;
+  max-width: 760px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #5a5a5a #000;
+  z-index: 2;
+}
+
+.mp-form::-webkit-scrollbar {
+  width: 10px;
+}
+
+.mp-form::-webkit-scrollbar-track {
+  background: #000;
+}
+
+.mp-form::-webkit-scrollbar-thumb {
+  background: #3f3f3f;
+  border-radius: 999px;
+  border: 2px solid #000;
+}
+
+.mp-form::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
+}
+
+.mp-signed {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.32em;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.mp-hub-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.mp-input {
+  width: min(480px, 100%);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3vw, 44px);
+  letter-spacing: 0.06em;
+  padding: 10px 0 8px;
+  outline: none;
+  user-select: text;
+  text-transform: uppercase;
+}
+
+.mp-input:focus {
+  border-bottom-color: #fff;
+}
+
+.mp-input-row {
+  width: 100%;
+  font-size: 18px;
+  text-align: right;
+  padding: 6px 0;
+}
+
+.mp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mp-maps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(110px, 150px));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.mp-maps .map-card {
+  width: 100%;
+}
+
+.mp-lobby-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 28px;
+  align-items: baseline;
+  width: 100%;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  text-align: left;
+  padding: 16px 0;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 32px);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transform-origin: left center;
+  transition: letter-spacing 0.14s ease, transform 0.14s ease;
+}
+
+.mp-lobby-row:hover,
+.mp-lobby-row:focus-visible {
+  letter-spacing: 0.09em;
+  transform: scale(1.02);
+  outline: none;
+}
+
+.mp-lobby-row .meta {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mp-lobby-meta {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.28em;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.mp-players {
+  list-style: none;
+}
+
+.mp-players li {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 32px);
+  letter-spacing: 0.06em;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mp-players li.is-you {
+  color: #fff;
+}
+
+.mp-players li.is-empty {
+  color: var(--muted);
+  opacity: 0.32;
+}
+
+.mp-note {
+  margin-top: 22px;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  color: var(--muted);
 }
 
 @media (max-width: 900px) {

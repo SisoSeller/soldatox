@@ -26,6 +26,11 @@ export function createUI(root, { settings, engine, onQuitToMenu }) {
   let selectedMap = null;
   let selectedMinutes = 720;
   let selectedWeather = "clear";
+  let playerName = "";
+  let mpMax = 4;
+  let mpMap = "sandbox";
+  let mpLobby = null;
+  let mpLobbies = [];
   let hudHidden = false;
   let loadTimer = 0;
   let ignoreEsc = false;
@@ -94,6 +99,72 @@ export function createUI(root, { settings, engine, onQuitToMenu }) {
       <button class="corner-btn left" data-act="back-options">BACK</button>
     </section>
 
+    <section class="screen" data-screen="mp-name">
+      <h1 class="title-xl compact">NAME</h1>
+      <div class="mp-form">
+        <div class="opt-label">PLAYER NAME</div>
+        <input class="mp-input" id="mp-player-name" maxlength="16" autocomplete="off" spellcheck="false" placeholder="ENTER NAME" />
+      </div>
+      <button class="corner-btn left" data-act="back-mp-name">BACK</button>
+      <button class="corner-btn right is-disabled" id="mp-name-go" data-act="mp-name-go">CONTINUE</button>
+    </section>
+
+    <section class="screen" data-screen="mp-hub">
+      <h1 class="title-xl compact">MULTIPLAYER</h1>
+      <div class="mp-form">
+        <div class="mp-signed" id="mp-signed"></div>
+        <nav class="mp-hub-nav">
+          <button class="menu-btn" data-act="mp-create">Create Match</button>
+          <button class="menu-btn" data-act="mp-join">Join Match</button>
+        </nav>
+      </div>
+      <button class="corner-btn left" data-act="back-mp-hub">BACK</button>
+    </section>
+
+    <section class="screen" data-screen="mp-create">
+      <h1 class="title-xl compact">CREATE MATCH</h1>
+      <div class="mp-form">
+        <div class="opt-row">
+          <div class="opt-label">LOBBY NAME</div>
+          <div class="opt-control">
+            <input class="mp-input mp-input-row" id="mp-lobby-name" maxlength="18" autocomplete="off" spellcheck="false" placeholder="NAME" />
+          </div>
+        </div>
+        <div class="opt-row">
+          <div class="opt-label">PLAYERS</div>
+          <div class="opt-control mp-chips" id="mp-max-chips">
+            <button type="button" class="chip" data-mp-max="2">2</button>
+            <button type="button" class="chip is-on" data-mp-max="4">4</button>
+            <button type="button" class="chip" data-mp-max="8">8</button>
+            <button type="button" class="chip" data-mp-max="16">16</button>
+          </div>
+        </div>
+        <div class="opt-label" style="margin-top:18px">MAP</div>
+        <div class="mp-maps" id="mp-maps"></div>
+      </div>
+      <button class="corner-btn left" data-act="back-mp-create">BACK</button>
+      <button class="corner-btn right" data-act="mp-create-go">CREATE</button>
+    </section>
+
+    <section class="screen" data-screen="mp-join">
+      <h1 class="title-xl compact">JOIN MATCH</h1>
+      <div class="mp-form">
+        <div class="mp-row-list" id="mp-join-list"></div>
+      </div>
+      <button class="corner-btn left" data-act="back-mp-join">BACK</button>
+    </section>
+
+    <section class="screen" data-screen="mp-lobby">
+      <h1 class="title-xl compact" id="mp-lobby-title">LOBBY</h1>
+      <div class="mp-form">
+        <div class="mp-lobby-meta" id="mp-lobby-meta"></div>
+        <ul class="mp-players" id="mp-players"></ul>
+        <div class="mp-note">MENU TEST ONLY</div>
+      </div>
+      <button class="corner-btn left" data-act="back-mp-lobby">BACK</button>
+      <button class="corner-btn right" data-act="mp-start">START</button>
+    </section>
+
     <section class="screen" data-screen="pause">
       <h1 class="title-xl">PAUSE</h1>
       <nav class="menu-stack">
@@ -144,6 +215,16 @@ export function createUI(root, { settings, engine, onQuitToMenu }) {
   grid.innerHTML = MAPS.map(
     (m) => `
     <button class="map-card ${m.locked ? "is-locked" : ""}" data-map="${m.id}" ${m.locked ? "disabled" : ""}>
+      <div class="map-art ${m.art}"></div>
+      ${m.locked ? `<div class="map-tag">COMING SOON</div>` : ""}
+      <div class="map-name">${m.name}</div>
+    </button>`
+  ).join("");
+
+  const mpMaps = root.querySelector("#mp-maps");
+  mpMaps.innerHTML = MAPS.map(
+    (m) => `
+    <button class="map-card ${m.locked ? "is-locked" : "is-selected"}" data-mp-map="${m.id}" ${m.locked ? "disabled" : ""}>
       <div class="map-art ${m.art}"></div>
       ${m.locked ? `<div class="map-tag">COMING SOON</div>` : ""}
       <div class="map-name">${m.name}</div>
@@ -361,12 +442,34 @@ export function createUI(root, { settings, engine, onQuitToMenu }) {
     } catch {
       /* ignore */
     }
-    const act = e.target.closest("[data-act]")?.dataset.act;
+    const actBtn = e.target.closest("[data-act]");
+    const act = actBtn?.dataset.act;
     const map = e.target.closest("[data-map]")?.dataset.map;
+    const mpMapBtn = e.target.closest("[data-mp-map]");
     const tab = e.target.closest("[data-tab]")?.dataset.tab;
-    if (act) handleAct(act);
+    const maxChip = e.target.closest("[data-mp-max]");
+    if (act) handleAct(act, actBtn.dataset);
     if (map && !e.target.closest(".map-card")?.disabled) selectMap(map);
+    if (mpMapBtn && !mpMapBtn.disabled) selectMpMap(mpMapBtn.dataset.mpMap);
+    if (maxChip) {
+      mpMax = Number(maxChip.dataset.mpMax);
+      root.querySelectorAll("[data-mp-max]").forEach((c) => c.classList.toggle("is-on", c === maxChip));
+      clickSound();
+    }
     if (tab) renderOptions(tab);
+  });
+
+  root.querySelector("#mp-player-name").addEventListener("input", syncNameGo);
+  root.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    if (e.target.id === "mp-player-name") {
+      e.preventDefault();
+      handleAct("mp-name-go");
+    }
+    if (e.target.id === "mp-lobby-name") {
+      e.preventDefault();
+      handleAct("mp-create-go");
+    }
   });
 
   function selectMap(id) {
@@ -382,11 +485,138 @@ export function createUI(root, { settings, engine, onQuitToMenu }) {
     root.querySelector("#play-map").classList.add("is-hidden");
   }
 
-  function handleAct(act) {
+  function cleanName(value) {
+    return value.replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 16).toUpperCase();
+  }
+
+  function syncNameGo() {
+    const ready = cleanName(root.querySelector("#mp-player-name").value).length >= 2;
+    const btn = root.querySelector("#mp-name-go");
+    btn.classList.toggle("is-disabled", !ready);
+  }
+
+  function openMpName() {
+    show("mp-name");
+    const input = root.querySelector("#mp-player-name");
+    input.value = playerName;
+    syncNameGo();
+    window.setTimeout(() => input.focus(), 40);
+  }
+
+  function selectMpMap(id) {
+    const info = MAPS.find((m) => m.id === id);
+    if (!info || info.locked) return;
+    mpMap = id;
+    root.querySelectorAll("#mp-maps .map-card").forEach((c) => c.classList.toggle("is-selected", c.dataset.mpMap === id));
+    clickSound();
+  }
+
+  function paintMpJoin() {
+    root.querySelector("#mp-join-list").innerHTML = mpLobbies
+      .map(
+        (l) => `
+      <button class="mp-lobby-row" data-act="mp-join-go" data-id="${l.id}">
+        <span>${l.name}</span>
+        <span class="meta">${l.people.length}/${l.max}</span>
+        <span class="meta">${l.map}</span>
+      </button>`
+      )
+      .join("");
+    bindHoverSounds(root);
+  }
+
+  function openLobby() {
+    if (!mpLobby) return;
+    root.querySelector("#mp-lobby-title").textContent = mpLobby.name;
+    root.querySelector("#mp-lobby-meta").textContent = `${mpLobby.map}  ·  ${mpLobby.people.length} / ${mpLobby.max}`;
+    const slots = [];
+    for (let i = 0; i < mpLobby.max; i += 1) {
+      const who = mpLobby.people[i];
+      if (!who) slots.push(`<li class="is-empty">—</li>`);
+      else slots.push(`<li class="${who === playerName ? "is-you" : ""}">${who}${who === playerName ? "  (YOU)" : ""}</li>`);
+    }
+    root.querySelector("#mp-players").innerHTML = slots.join("");
+    show("mp-lobby");
+  }
+
+  function joinLobby(id) {
+    const found = mpLobbies.find((l) => l.id === id);
+    if (!found) return;
+    if (!found.people.includes(playerName)) {
+      if (found.people.length >= found.max) {
+        toast("LOBBY FULL");
+        return;
+      }
+      found.people.push(playerName);
+    }
+    mpLobby = found;
+    confirmSound();
+    openLobby();
+  }
+
+  function handleAct(act, data = {}) {
     if (act === "play") {
       confirmSound();
       goLoading("maps", "MAP LIST");
     } else if (act === "multi") {
+      clickSound();
+      openMpName();
+    } else if (act === "mp-name-go") {
+      const name = cleanName(root.querySelector("#mp-player-name").value);
+      if (name.length < 2) return;
+      playerName = name;
+      root.querySelector("#mp-signed").textContent = playerName;
+      confirmSound();
+      show("mp-hub");
+    } else if (act === "back-mp-name") {
+      backSound();
+      show("menu");
+    } else if (act === "back-mp-hub") {
+      backSound();
+      openMpName();
+    } else if (act === "mp-create") {
+      clickSound();
+      root.querySelector("#mp-lobby-name").value = "";
+      mpMax = 4;
+      mpMap = "sandbox";
+      root.querySelectorAll("[data-mp-max]").forEach((c) => c.classList.toggle("is-on", c.dataset.mpMax === "4"));
+      root.querySelectorAll("#mp-maps .map-card").forEach((c) => c.classList.toggle("is-selected", c.dataset.mpMap === "sandbox"));
+      show("mp-create");
+    } else if (act === "back-mp-create") {
+      backSound();
+      show("mp-hub");
+    } else if (act === "mp-create-go") {
+      const lobbyName = cleanName(root.querySelector("#mp-lobby-name").value);
+      if (lobbyName.length < 2) {
+        root.querySelector("#mp-lobby-name").focus();
+        return;
+      }
+      const mapInfo = MAPS.find((m) => m.id === mpMap);
+      if (!mapInfo || mapInfo.locked) return;
+      mpLobby = {
+        id: `L${Date.now()}`,
+        name: lobbyName,
+        map: mapInfo.name,
+        max: mpMax,
+        people: [playerName],
+      };
+      mpLobbies.push(mpLobby);
+      confirmSound();
+      openLobby();
+    } else if (act === "mp-join") {
+      clickSound();
+      paintMpJoin();
+      show("mp-join");
+    } else if (act === "mp-join-go") {
+      joinLobby(data.id);
+    } else if (act === "back-mp-join") {
+      backSound();
+      show("mp-hub");
+    } else if (act === "back-mp-lobby") {
+      backSound();
+      mpLobby = null;
+      show("mp-hub");
+    } else if (act === "mp-start") {
       clickSound();
       toast("COMING SOON");
     } else if (act === "mods") {
@@ -688,6 +918,16 @@ export function createUI(root, { settings, engine, onQuitToMenu }) {
         handleAct("back-maps");
       } else if (screen === "time") {
         handleAct("back-time");
+      } else if (screen === "mp-name") {
+        handleAct("back-mp-name");
+      } else if (screen === "mp-hub") {
+        handleAct("back-mp-hub");
+      } else if (screen === "mp-create") {
+        handleAct("back-mp-create");
+      } else if (screen === "mp-join") {
+        handleAct("back-mp-join");
+      } else if (screen === "mp-lobby") {
+        handleAct("back-mp-lobby");
       } else if (screen === "game") {
         e.preventDefault();
         pauseGame();
@@ -741,7 +981,7 @@ export function createUI(root, { settings, engine, onQuitToMenu }) {
 }
 
 function bindHoverSounds(scope) {
-  scope.querySelectorAll(".menu-btn, .corner-btn, .tab-btn, .map-card:not(.is-locked), .chip, .drop-btn, .toggle").forEach((el) => {
+  scope.querySelectorAll(".menu-btn, .corner-btn, .tab-btn, .map-card:not(.is-locked), .chip, .drop-btn, .toggle, .mp-lobby-row").forEach((el) => {
     if (el.dataset.hoverBound) return;
     el.dataset.hoverBound = "1";
     el.addEventListener("mouseenter", () => {

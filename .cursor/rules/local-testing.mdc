@@ -1,0 +1,13 @@
+---
+description: Do not publish or deploy until the user explicitly asks
+alwaysApply: true
+---
+
+# Local testing only until publish is requested
+
+Until the user explicitly says to publish/deploy (e.g. "pubblica", "aggiorna il sito", "push"), work is local testing only.
+
+- Update the project files as requested.
+- Do not `git push`, do not deploy GitHub Pages, do not publish `gh-pages`, do not upload the site.
+- The public site at https://sisoseller.github.io/soldatox/ staying on older files is expected.
+- Commit only if the user asks. Push/deploy only when they clearly ask to publish.
