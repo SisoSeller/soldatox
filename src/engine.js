@@ -1012,6 +1012,7 @@ function makePlayerMesh() {
 
 function loadCobbleFloor(mesh) {
   const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
   const repeat = 28;
   const prep = (tex, space) => {
     tex.wrapS = THREE.RepeatWrapping;
