@@ -3,7 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <title>SolDatoX</title>
+    <script>
+      (function () {
+        function appBase() {
+          var path = location.pathname || "/";
+          if (/\.html?$/i.test(path)) path = path.replace(/\/[^/]+$/, "");
+          if (path.length > 1 && path.charAt(path.length - 1) === "/") path = path.slice(0, -1);
+          return path === "/" ? "" : path;
+        }
+        var base = appBase();
+        function fix(url) {
+          if (typeof url !== "string" || !base) return url;
+          if (
+            url.indexOf("/textures/") === 0 ||
+            url.indexOf("/models/") === 0 ||
+            url.indexOf("/maps/") === 0
+          ) {
+            return base + url;
+          }
+          return url;
+        }
+        var desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "src");
+        if (desc && desc.set) {
+          Object.defineProperty(HTMLImageElement.prototype, "src", {
+            configurable: true,
+            enumerable: true,
+            get: function () {
+              return desc.get.call(this);
+            },
+            set: function (v) {
+              desc.set.call(this, fix(v));
+            },
+          });
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,7 +47,7 @@
       rel="stylesheet"
     />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%23000' width='32' height='32'/><text x='4' y='22' font-size='14' fill='%23fff' font-family='sans-serif'>SX</text></svg>" />
-    <script type="module" crossorigin src="/soldatox/assets/index-fak0o90H.js"></script>
+    <script type="module" crossorigin src="/soldatox/assets/index-LXt9ymby.js"></script>
     <link rel="stylesheet" crossorigin href="/soldatox/assets/index-D4eskLWd.css">
   </head>
   <body>
